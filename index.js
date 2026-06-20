@@ -4,6 +4,7 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const handleMessage = require('./handlers/messageHandler');
 
+
 const client = new Client({
 
     authStrategy: new LocalAuth({
@@ -11,9 +12,13 @@ const client = new Client({
     }),
 
     puppeteer: {
+
         headless: true,
 
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+        executablePath:
+            process.env.CHROME_BIN ||
+            process.env.PUPPETEER_EXECUTABLE_PATH ||
+            '/usr/bin/chromium',
 
         args: [
             '--no-sandbox',
@@ -22,16 +27,23 @@ const client = new Client({
             '--disable-gpu',
             '--disable-software-rasterizer',
             '--disable-extensions',
+            '--disable-background-networking',
+            '--disable-default-apps',
+            '--disable-sync',
             '--no-first-run',
-            '--no-zygote'
+            '--no-zygote',
+            '--single-process'
         ]
+
     }
+
 });
 
 
+// QR LOGIN
 client.on('qr', (qr) => {
 
-    console.log('📱 Scan QR Code:');
+    console.log('📱 Scan WhatsApp QR Code:');
 
     qrcode.generate(qr, {
         small: true
@@ -40,6 +52,7 @@ client.on('qr', (qr) => {
 });
 
 
+// AUTH SUCCESS
 client.on('authenticated', () => {
 
     console.log('✅ WhatsApp authenticated');
@@ -47,27 +60,55 @@ client.on('authenticated', () => {
 });
 
 
+// READY
 client.on('ready', () => {
 
-    console.log('✅ Bot is ready!');
+    console.log('🚀 WhatsApp AI Bot is ready!');
 
 });
 
 
-client.on('auth_failure', (msg) => {
+// AUTH ERROR
+client.on('auth_failure', (error) => {
 
-    console.log('❌ Authentication failed:', msg);
+    console.error('❌ WhatsApp authentication failed:', error);
 
 });
 
 
+// MESSAGE HANDLER
+client.on('message_create', async (message) => {
+
+    try {
+
+        await handleMessage(client, message);
+
+    } catch (error) {
+
+        console.error(
+            '❌ Message handler error:',
+            error
+        );
+
+    }
+
+});
+
+
+// DISCONNECT AUTO RESTART
 client.on('disconnected', (reason) => {
 
-    console.log('❌ WhatsApp disconnected:', reason);
+    console.log(
+        '❌ WhatsApp disconnected:',
+        reason
+    );
+
 
     setTimeout(() => {
 
-        console.log('🔄 Restarting WhatsApp connection...');
+        console.log(
+            '🔄 Reconnecting WhatsApp...'
+        );
 
         client.initialize();
 
@@ -76,19 +117,24 @@ client.on('disconnected', (reason) => {
 });
 
 
-client.on('message_create', async (msg) => {
+// START BOT
+(async () => {
 
     try {
 
-        await handleMessage(client, msg);
+        console.log('⏳ Starting WhatsApp client...');
+
+        await client.initialize();
 
     } catch (error) {
 
-        console.error('Message handler error:', error);
+        console.error(
+            '❌ WhatsApp startup error:',
+            error
+        );
+
+        process.exit(1);
 
     }
 
-});
-
-
-client.initialize();
+})();
