@@ -1,15 +1,17 @@
 [phases.setup]
 nixPkgs = [
+  "nodejs_22",
   "chromium",
   "glib",
   "nss",
   "atk",
   "cups",
-  "libdrm",
-  "mesa",
+  "dbus",
+  "expat",
+  "fontconfig",
+  "freetype",
+  "gtk3",
   "pango",
-  "cairo",
-  "alsa-lib",
   "xorg.libX11",
   "xorg.libXcomposite",
   "xorg.libXdamage",
@@ -17,3 +19,6 @@ nixPkgs = [
   "xorg.libXfixes",
   "xorg.libXrandr"
 ]
+
+[start]
+cmd = "npm start"
