@@ -1,3 +1,4 @@
+console.log("INDEX FILE LOADED");
 require('./server');
 
 const { Client, LocalAuth } = require('whatsapp-web.js');
